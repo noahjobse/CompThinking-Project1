@@ -1,52 +1,86 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from supabase import create_client, Client
-from dotenv import load_dotenv
-import os
+from pathlib import Path
+import json
+from datetime import datetime
 
-# Load env vars
-load_dotenv()
-
+# -----------------------------
+# Setup
+# -----------------------------
 app = FastAPI()
 
-# Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change to your Next.js domain later
+    allow_origins=["*"],  # Update to specific domain later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Initialize both clients ---
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+# -----------------------------
+# File paths
+# -----------------------------
+DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
 
-if not all([SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY]):
-    raise ValueError("Missing one or more Supabase environment variables.")
+USERS_FILE = DATA_DIR / "users.json"
+ACTIVITY_FILE = DATA_DIR / "activity.json"
 
-supabase_public: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+# -----------------------------
+# Helper functions
+# -----------------------------
+def read_json(path: Path):
+    if not path.exists():
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
+def write_json(path: Path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
-# --- Routes ---
+def add_activity(message: str):
+    data = read_json(ACTIVITY_FILE)
+    logs = data.get("logs", [])
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logs.append(f"{timestamp} — {message}")
+    write_json(ACTIVITY_FILE, {"logs": logs})
+
+# -----------------------------
+# Seed default users (if empty)
+# -----------------------------
+if not USERS_FILE.exists():
+    default_users = {
+        "users": [
+            {"id": 1, "username": "admin123", "password": "admin123", "role": "Admin"},
+            {"id": 2, "username": "editor123", "password": "editor123", "role": "Editor"},
+            {"id": 3, "username": "viewer123", "password": "viewer123", "role": "Viewer"},
+        ]
+    }
+    write_json(USERS_FILE, default_users)
+    write_json(ACTIVITY_FILE, {"logs": []})
+
+# -----------------------------
+# Routes
+# -----------------------------
 @app.get("/")
 def root():
-    return {"message": "FastAPI + Supabase connected ✅"}
-
+    return {"message": "FastAPI JSON backend running ✅"}
 
 @app.get("/users")
 def get_users():
-    """Public route (uses anon key)"""
-    response = supabase_public.table("users").select("*").limit(10).execute()
-    return response.data
-
+    """Return all users."""
+    users = read_json(USERS_FILE).get("users", [])
+    return users
 
 @app.post("/admin/users")
 def admin_insert_user():
-    """Admin route (uses service key, bypasses RLS)"""
-    response = supabase_admin.table("users").insert({"name": "AdminCreated"}).execute()
-    if response.data:
-        return {"status": "Inserted via service key ✅", "data": response.data}
-    raise HTTPException(status_code=500, detail=response.error_message)
+    """Add a user locally (Admin only placeholder)."""
+    data = read_json(USERS_FILE)
+    users = data.get("users", [])
+    new_user = {"id": len(users) + 1, "username": f"user{len(users)+1}", "password": "1234", "role": "Viewer"}
+    users.append(new_user)
+    write_json(USERS_FILE, {"users": users})
+    add_activity(f"admin123 created new user {new_user['username']}")
+    return {"status": "User added ✅", "data": new_user}
+
