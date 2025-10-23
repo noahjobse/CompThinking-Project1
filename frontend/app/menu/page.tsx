@@ -55,4 +55,3 @@ export default function MenuPage() {
         </div>
     )
 }
-// grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4
