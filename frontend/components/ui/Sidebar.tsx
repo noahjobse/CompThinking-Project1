@@ -11,7 +11,7 @@ export default function Sidebar() {
 
     return (
         <aside className="w-60 bg-gray-100 p-4 min-h-screen">
-            {/* Dashboard Links List */}
+            {/* Dashboard Links */}
             <nav className="flex flex-col gap-3">
                 {links.map((link) => (
                     <NavLink key={link.href} href={link.href} label={link.label}/>
