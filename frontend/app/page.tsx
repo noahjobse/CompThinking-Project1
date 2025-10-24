@@ -1,7 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
+
+  // Temporary Redirect
+  useEffect(() => {
+    router.replace("/login");
+  }, [router]);
+
   const [status, setStatus] = useState<string>("");
 
   async function testConnection() {
