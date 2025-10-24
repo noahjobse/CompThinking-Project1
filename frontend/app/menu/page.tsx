@@ -5,25 +5,21 @@ import { useRouter } from "next/navigation";
 
 export default function MenuPage() {
     const router = useRouter();
+    
     const handleClick = () => {
         router.push("/dashboard/doc");
     }
     
     return (
         <div className="flex flex-col h-screen w-screen">
-            {/* Header */}
             <Header/>
 
             {/* Main Content */}
             <div className="flex flex-1  flex-col p-6">
-
-                {/* Title */}
                 <h1 className="text-2xl font-bold mb-4">Menu</h1>
 
                 {/* Projects Section*/}
                 <div className="flex flex-1 flex-col">
-                    
-                    {/* Title */}
                     <h2 className="text-lg font-bold mb-1.5">Your Projects</h2>
                     
                     {/* Projects List */}
