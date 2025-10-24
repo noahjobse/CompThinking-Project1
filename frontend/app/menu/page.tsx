@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 export default function MenuPage() {
     const router = useRouter();
     const handleClick = () => {
-        router.push("/dashboard");
+        router.push("/dashboard/doc");
     }
     
     return (
