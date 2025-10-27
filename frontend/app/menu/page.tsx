@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/ui/Header"
+import AuthGuard from "@/components/AuthGuard";
 import { useRouter } from "next/navigation";
 
 export default function MenuPage() {
@@ -11,7 +12,8 @@ export default function MenuPage() {
     }
     
     return (
-        <div className="flex flex-col h-screen w-screen">
+        <AuthGuard>
+            <div className="flex flex-col h-screen w-screen">
             <Header/>
 
             {/* Main Content */}
@@ -48,6 +50,7 @@ export default function MenuPage() {
                 </div>
             </div>
             
-        </div>
+            </div>
+        </AuthGuard>
     )
 }

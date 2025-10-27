@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from pathlib import Path
 import json
 from datetime import datetime
@@ -25,6 +26,17 @@ DATA_DIR.mkdir(exist_ok=True)
 
 USERS_FILE = DATA_DIR / "users.json"
 ACTIVITY_FILE = DATA_DIR / "activity.json"
+
+# -----------------------------
+# Request Models
+# -----------------------------
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class ActivityRequest(BaseModel):
+    user: str
+    action: str
 
 # -----------------------------
 # Helper functions
@@ -67,11 +79,38 @@ if not USERS_FILE.exists():
 def root():
     return {"message": "FastAPI JSON backend running ✅"}
 
+@app.post("/login")
+def login(request: LoginRequest):
+    """Authenticate user with username and password."""
+    users = read_json(USERS_FILE).get("users", [])
+    
+    for user in users:
+        if user["username"] == request.username and user["password"] == request.password:
+            return {
+                "username": user["username"],
+                "role": user["role"]
+            }
+    
+    raise HTTPException(status_code=401, detail="Invalid username or password")
+
 @app.get("/users")
 def get_users():
     """Return all users."""
     users = read_json(USERS_FILE).get("users", [])
     return users
+
+@app.get("/api/activity")
+def get_activity():
+    """Get all activity logs."""
+    data = read_json(ACTIVITY_FILE)
+    return data
+
+@app.post("/api/activity")
+def log_activity(request: ActivityRequest):
+    """Log user activity."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    add_activity(f"{request.user} {request.action}")
+    return {"status": "Activity logged ✅"}
 
 @app.post("/admin/users")
 def admin_insert_user():
@@ -83,4 +122,3 @@ def admin_insert_user():
     write_json(USERS_FILE, {"users": users})
     add_activity(f"admin123 created new user {new_user['username']}")
     return {"status": "User added ✅", "data": new_user}
-

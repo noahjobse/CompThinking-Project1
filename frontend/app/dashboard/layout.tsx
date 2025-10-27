@@ -2,6 +2,7 @@
 import Header from "@/components/ui/Header";
 import Sidebar from "@/components/ui/Sidebar";
 import PageShell from "@/components/ui/PageShell";
+import AuthGuard from "@/components/AuthGuard";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -21,14 +22,15 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
     }, [router]);
 
     return (
-        <div className="flex flex-col h-screen">
-            <Header/>
-            <div className="flex flex-1 overflow-hidden">
-                <Sidebar/>
-                <PageShell>{children}</PageShell>
+        <AuthGuard>
+            <div className="flex flex-col h-screen">
+                <Header/>
+                <div className="flex flex-1 overflow-hidden">
+                    <Sidebar/>
+                    <PageShell>{children}</PageShell>
+                </div>
+                
             </div>
-            
-        </div>
+        </AuthGuard>
     );
 }
-
