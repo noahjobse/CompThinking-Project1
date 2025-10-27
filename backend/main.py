@@ -7,6 +7,7 @@ from routes.api import users
 from pathlib import Path
 import json
 from datetime import datetime
+from utils.constants import USERS_FILE, ACTIVITY_FILE
 
 
 # -----------------------------
@@ -23,16 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(users.router, prefix="/api")
-
-
-# -----------------------------
-# File paths
-# -----------------------------
-DATA_DIR = Path(__file__).parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
-
-USERS_FILE = DATA_DIR / "users.json"
-ACTIVITY_FILE = DATA_DIR / "activity.json"
+app.include_router(activity.router, prefix="/api")
 
 # -----------------------------
 # Helper functions
