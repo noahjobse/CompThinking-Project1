@@ -4,3 +4,4 @@ combine.py
 backend/data/activity.json
 /backend/__pycache__
 backend/.env
+/backend/models/__pycache__
