@@ -3,3 +3,4 @@ combined_output.txt
 combine.py
 backend/data/activity.json
 /backend/__pycache__
+backend/.env
