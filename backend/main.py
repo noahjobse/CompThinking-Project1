@@ -7,7 +7,8 @@ from routes.api import users
 from pathlib import Path
 import json
 from datetime import datetime
-from utils.constants import USERS_FILE, ACTIVITY_FILE
+from routes.api import activity
+from utils.constants import USERS_PATH, ACTIVITY_PATH
 
 
 # -----------------------------
@@ -23,8 +24,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(users.router, prefix="/api")
-app.include_router(activity.router, prefix="/api")
+app.include_router(users.router)
+app.include_router(activity.router)
 
 # -----------------------------
 # Helper functions
@@ -40,16 +41,16 @@ def write_json(path: Path, data):
         json.dump(data, f, indent=2)
 
 def add_activity(message: str):
-    data = read_json(ACTIVITY_FILE)
+    data = read_json(ACTIVITY_PATH)
     logs = data.get("logs", [])
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logs.append(f"{timestamp} — {message}")
-    write_json(ACTIVITY_FILE, {"logs": logs})
+    write_json(ACTIVITY_PATH, {"logs": logs})
 
 # -----------------------------
 # Seed default users (if empty)
 # -----------------------------
-if not USERS_FILE.exists():
+if not USERS_PATH.exists():
     default_users = {
         "users": [
             {"id": 1, "username": "admin123", "password": "admin123", "role": "Admin"},
@@ -57,8 +58,8 @@ if not USERS_FILE.exists():
             {"id": 3, "username": "viewer123", "password": "viewer123", "role": "Viewer"},
         ]
     }
-    write_json(USERS_FILE, default_users)
-    write_json(ACTIVITY_FILE, {"logs": []})
+    write_json(USERS_PATH, default_users)
+    write_json(ACTIVITY_PATH, {"logs": []})
 
 # -----------------------------
 # Routes
@@ -70,7 +71,7 @@ def root():
 @app.post("/login")
 def login(request: LoginRequest):
     """Authenticate user with username and password."""
-    users = read_json(USERS_FILE).get("users", [])
+    users = read_json(USERS_PATH).get("users", [])
     
     for user in users:
         if user["username"] == request.username and user["password"] == request.password:
@@ -80,27 +81,3 @@ def login(request: LoginRequest):
             }
     
     raise HTTPException(status_code=401, detail="Invalid username or password")
-
-@app.get("/api/activity")
-def get_activity():
-    """Get all activity logs."""
-    data = read_json(ACTIVITY_FILE)
-    return data
-
-@app.post("/api/activity")
-def log_activity(request: ActivityRequest):
-    """Log user activity."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    add_activity(f"{request.user} {request.action}")
-    return {"status": "Activity logged ✅"}
-
-@app.post("/admin/users")
-def admin_insert_user():
-    """Add a user locally (Admin only placeholder)."""
-    data = read_json(USERS_FILE)
-    users = data.get("users", [])
-    new_user = {"id": len(users) + 1, "username": f"user{len(users)+1}", "password": "1234", "role": "Viewer"}
-    users.append(new_user)
-    write_json(USERS_FILE, {"users": users})
-    add_activity(f"admin123 created new user {new_user['username']}")
-    return {"status": "User added ✅", "data": new_user}
