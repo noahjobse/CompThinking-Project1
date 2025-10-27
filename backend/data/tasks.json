@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Write project overview",
+      "assignedTo": "editor123",
+      "status": "In Progress"
+    },
+    {
+      "id": 2,
+      "title": "Review roles",
+      "assignedTo": "admin123",
+      "status": "Pending"
+    }
+  ]
+}
