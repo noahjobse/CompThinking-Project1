@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.schemas import LoginRequest, ActivityRequest
 from utils.constants import USERS_PATH, ACTIVITY_PATH, DATETIME_FMT
 from utils.file_ops import read_json, write_json, add_activity
+from routes.api import users
 from pathlib import Path
 import json
 from datetime import datetime
@@ -20,6 +21,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(users.router, prefix="/api")
+
 
 # -----------------------------
 # File paths
@@ -84,12 +88,6 @@ def login(request: LoginRequest):
             }
     
     raise HTTPException(status_code=401, detail="Invalid username or password")
-
-@app.get("/users")
-def get_users():
-    """Return all users."""
-    users = read_json(USERS_FILE).get("users", [])
-    return users
 
 @app.get("/api/activity")
 def get_activity():
