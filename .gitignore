@@ -1,3 +1,5 @@
 frontend/package-lock.json
 combined_output.txt
 combine.py
+backend/data/activity.json
+/backend/__pycache__
