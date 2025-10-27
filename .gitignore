@@ -5,3 +5,5 @@ backend/data/activity.json
 /backend/__pycache__
 backend/.env
 /backend/models/__pycache__
+/backend/routes/api/__pycache__
+/backend/utils/__pycache__
