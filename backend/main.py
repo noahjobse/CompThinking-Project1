@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from models.schemas import LoginRequest, ActivityRequest
 from pathlib import Path
 import json
 from datetime import datetime
+
 
 # -----------------------------
 # Setup
@@ -26,17 +27,6 @@ DATA_DIR.mkdir(exist_ok=True)
 
 USERS_FILE = DATA_DIR / "users.json"
 ACTIVITY_FILE = DATA_DIR / "activity.json"
-
-# -----------------------------
-# Request Models
-# -----------------------------
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-class ActivityRequest(BaseModel):
-    user: str
-    action: str
 
 # -----------------------------
 # Helper functions
