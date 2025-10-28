@@ -18,10 +18,10 @@ async def get_users():
 async def create_user(request: CreateUserRequest):
     """Create a new user (Admin-only)."""
     try:
-        creator = request.get("creator")
-        new_username = request.get("username")
-        new_password = request.get("password")
-        new_role = request.get("role", "Viewer")
+        creator = request.creator
+        new_username = request.username
+        new_password = request.password
+        new_role = request.role or "Viewer"
 
         if not creator or not new_username or not new_password:
             raise HTTPException(status_code=400, detail="Missing required fields.")
@@ -82,7 +82,7 @@ async def login(request: LoginRequest):
 async def logout(request: LogoutRequest):
     """Log a user out and record the activity."""
     try:
-        username = request.get("username")
+        username = request.username
         if not username:
             raise HTTPException(status_code=400, detail="Missing username field.")
 
