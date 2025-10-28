@@ -4,9 +4,7 @@ import json
 import threading
 from datetime import datetime
 from typing import Any, Dict
-
 from utils.constants import ACTIVITY_PATH, DATETIME_FMT
-
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -23,8 +21,12 @@ def read_json(path: Path) -> Dict[str, Any]:
     """Thread-safe read."""
     _ensure_file(path, {})
     with _LOCK:
-        with path.open("r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            # Recover gracefully if file is corrupted
+            return {}
 
 def write_json(path: Path, data: Dict[str, Any]) -> None:
     """Thread-safe write with atomic replace."""
@@ -37,14 +39,13 @@ def write_json(path: Path, data: Dict[str, Any]) -> None:
 
 def add_activity(user: str, action: str, details: str | None = None) -> None:
     """Log an activity entry."""
-    log_path = ACTIVITY_PATH
-    _ensure_file(log_path, {"logs": []})
+    _ensure_file(ACTIVITY_PATH, {"logs": []})
     now = datetime.now().strftime(DATETIME_FMT)
-    data = read_json(log_path)
+    data = read_json(ACTIVITY_PATH)
     data.setdefault("logs", []).append({
         "timestamp": now,
         "user": user,
         "action": action,
-        "details": details
+        "details": details,
     })
-    write_json(log_path, data)
+    write_json(ACTIVITY_PATH, data)

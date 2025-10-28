@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 async def get_tasks():
     """Get all tasks."""
     data = read_json(TASKS_PATH)
-    return data.get("tasks", [])
+    return {"status": "success", "data": data.get("tasks", [])}
 
 @router.post("/")
 async def create_task(task: Task):
@@ -17,12 +17,12 @@ async def create_task(task: Task):
     data = read_json(TASKS_PATH)
     tasks = data.get("tasks", [])
     new_task = task.model_dump()
-    new_task["id"] = len(tasks) + 1
+    new_task["id"] = max([t["id"] for t in tasks], default=0) + 1
 
     tasks.append(new_task)
     write_json(TASKS_PATH, {"tasks": tasks})
 
-    add_activity(f"{new_task['assigned_to']} created a new task: {new_task['title'] }")
+    add_activity(new_task["assignedTo"], "created task", new_task["title"])
     return {"status": "success", "data": new_task}
 
 @router.put("/{task_id}")
@@ -38,7 +38,7 @@ async def update_task(task_id: int, task: Task):
             tasks[idx] = updated_task
             write_json(TASKS_PATH, {"tasks": tasks})
 
-            add_activity(f"Task {task_id} updated by {updated_task['assigned_to']}")
+            add_activity(updated_task["assignedTo"], "updated task", updated_task["title"])
             return {"status": "success", "data": updated_task}
     
     raise HTTPException(status_code=404, detail="Task not found")
@@ -54,7 +54,7 @@ async def delete_task(task_id: int):
             deleted_task = tasks.pop(idx)
             write_json(TASKS_PATH, {"tasks": tasks})
 
-            add_activity(f"Task {task_id} deleted by {deleted_task['assigned_to']}")
+            add_activity(deleted_task["assignedTo"], "deleted task", deleted_task["title"])
             return {"status": "success", "data": f"Task {task_id} deleted"}
     
     raise HTTPException(status_code=404, detail="Task not found")

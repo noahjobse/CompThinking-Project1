@@ -10,5 +10,4 @@ DOCUMENT_PATH = DATA_DIR / "document.json"
 ACTIVITY_PATH = DATA_DIR / "activity.json"
 
 ROLES = ["Admin", "Editor", "Viewer"]
-
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"

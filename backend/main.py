@@ -1,12 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from models.schemas import LoginRequest, ActivityRequest
-from utils.constants import USERS_PATH, ACTIVITY_PATH, DATETIME_FMT
-from utils.file_ops import read_json, write_json, add_activity
-from routes.api import users
-from pathlib import Path
-import json
-from datetime import datetime
+from utils.constants import USERS_PATH, ACTIVITY_PATH
+from utils.file_ops import write_json
 from routes.api import activity, users, tasks, document
 from utils.constants import USERS_PATH, ACTIVITY_PATH
 
@@ -30,26 +25,6 @@ app.include_router(tasks.router)
 app.include_router(document.router)
 
 # -----------------------------
-# Helper functions
-# -----------------------------
-def read_json(path: Path):
-    if not path.exists():
-        return {}
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def write_json(path: Path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-
-def add_activity(message: str):
-    data = read_json(ACTIVITY_PATH)
-    logs = data.get("logs", [])
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    logs.append(f"{timestamp} — {message}")
-    write_json(ACTIVITY_PATH, {"logs": logs})
-
-# -----------------------------
 # Seed default users (if empty)
 # -----------------------------
 if not USERS_PATH.exists():
@@ -69,17 +44,3 @@ if not USERS_PATH.exists():
 @app.get("/")
 def root():
     return {"message": "FastAPI JSON backend running ✅"}
-
-@app.post("/login")
-def login(request: LoginRequest):
-    """Authenticate user with username and password."""
-    users = read_json(USERS_PATH).get("users", [])
-    
-    for user in users:
-        if user["username"] == request.username and user["password"] == request.password:
-            return {
-                "username": user["username"],
-                "role": user["role"]
-            }
-    
-    raise HTTPException(status_code=401, detail="Invalid username or password")
