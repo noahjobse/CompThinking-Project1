@@ -7,7 +7,7 @@ from routes.api import users
 from pathlib import Path
 import json
 from datetime import datetime
-from routes.api import activity
+from routes.api import activity, users, tasks, document
 from utils.constants import USERS_PATH, ACTIVITY_PATH
 
 
@@ -26,6 +26,8 @@ app.add_middleware(
 
 app.include_router(users.router)
 app.include_router(activity.router)
+app.include_router(tasks.router)
+app.include_router(document.router)
 
 # -----------------------------
 # Helper functions
