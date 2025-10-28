@@ -15,30 +15,53 @@ async def get_users():
         raise HTTPException(status_code=500, detail=f"Failed to read users: {str(e)}")
     
 @router.post("/")
-async def create_user():
-    """Create a new user."""
+async def create_user(request: dict):
+    """Create a new user (Admin-only)."""
     try:
+        creator = request.get("creator")
+        new_username = request.get("username")
+        new_password = request.get("password")
+        new_role = request.get("role", "Viewer")
+
+        if not creator or not new_username or not new_password:
+            raise HTTPException(status_code=400, detail="Missing required fields.")
+
+        # Load all users
         data = read_json(USERS_PATH)
         users = data.get("users", [])
+
+        # Verify creator is Admin
+        creator_user = next((u for u in users if u["username"] == creator), None)
+        if not creator_user or creator_user["role"] != "Admin":
+            raise HTTPException(status_code=403, detail="Only Admins can create users.")
+
+        # Check for duplicates
+        if any(u["username"] == new_username for u in users):
+            raise HTTPException(status_code=400, detail="Username already exists.")
+
+        # Create the new user
         new_user = {
             "id": len(users) + 1,
-            "username": f"user{len(users) + 1}",
-            "password": "defaultpassword",
-            "role": "Viewer",  # ✅ match schema literal
+            "username": new_username,
+            "password": new_password,
+            "role": new_role,
         }
 
         users.append(new_user)
         write_json(USERS_PATH, {"users": users})
-        add_activity("system", "created user", new_user["username"])
+        add_activity(creator, "created user", new_username)
 
         return {"status": "success", "data": new_user}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
 
 @router.post("/login")
 async def login(request: LoginRequest):
-    """Authenticate user credentials and return role info."""
+    """Authenticate a user and return role information."""
     try:
         data = read_json(USERS_PATH)
         users = data.get("users", [])
@@ -48,10 +71,7 @@ async def login(request: LoginRequest):
                 add_activity(user["username"], "logged in")
                 return {
                     "status": "success",
-                    "data": {
-                        "username": user["username"],
-                        "role": user["role"]
-                    }
+                    "data": {"username": user["username"], "role": user["role"]},
                 }
 
         raise HTTPException(status_code=401, detail="Invalid username or password")
