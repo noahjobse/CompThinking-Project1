@@ -6,15 +6,15 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/activity", tags=["activity"])
 
-@router.get("")
-def get_activity():
+@router.get("/")
+async def get_activity():
     """Get all activity logs."""
     data = read_json(ACTIVITY_PATH)
-    return data
+    return {"status": "success", "data": data.get("logs", [])}
 
-@router.post("")
-def log_activity(request: ActivityRequest):
-    """Log user activity."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+@router.post("/")
+async def create_activity(request: ActivityRequest):
+    """Log a new activity."""
     add_activity(f"{request.user} {request.action}")
-    return {"status": "Activity logged ✅"}
+    return {"status": "success", "data": {"user": request.user, "action": request.action}}
