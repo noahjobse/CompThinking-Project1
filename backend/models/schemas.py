@@ -56,3 +56,12 @@ class ActivityRequest(BaseModel):
     user: str
     action: str
     details: Optional[str] = None
+
+class CreateUserRequest(BaseModel):
+    creator: str
+    username: str
+    password: str
+    role: str = "Viewer"
+
+class LogoutRequest(BaseModel):
+    username: str

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.schemas import LoginRequest
+from models.schemas import LoginRequest, CreateUserRequest, LogoutRequest
 from utils.file_ops import read_json, write_json, add_activity
 from utils.constants import USERS_PATH
 
@@ -15,7 +15,7 @@ async def get_users():
         raise HTTPException(status_code=500, detail=f"Failed to read users: {str(e)}")
 
 @router.post("/")
-async def create_user(request: dict):
+async def create_user(request: CreateUserRequest):
     """Create a new user (Admin-only)."""
     try:
         creator = request.get("creator")
@@ -79,7 +79,7 @@ async def login(request: LoginRequest):
         raise HTTPException(status_code=500, detail=f"Failed to log in: {str(e)}")
 
 @router.post("/logout")
-async def logout(request: dict):
+async def logout(request: LogoutRequest):
     """Log a user out and record the activity."""
     try:
         username = request.get("username")
