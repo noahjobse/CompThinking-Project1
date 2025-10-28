@@ -73,8 +73,13 @@ async def login(request: LoginRequest):
                     "data": {"username": user["username"], "role": user["role"]},
                 }
 
+        # Expected fail: bad credentials
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    # Allow real HTTP errors (401, 403, etc.) to pass through
+    except HTTPException:
+        raise
+    # Catch unexpected issues only
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to log in: {str(e)}")
 

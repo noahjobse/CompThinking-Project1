@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from models.schemas import ActivityRequest
 from utils.file_ops import read_json, add_activity
 from utils.constants import ACTIVITY_PATH
@@ -6,14 +6,19 @@ from utils.constants import ACTIVITY_PATH
 router = APIRouter(prefix="/api/activity", tags=["activity"])
 
 @router.get("/")
-async def get_activity():
-    """Get all activity logs."""
-    try: 
+async def get_activity(limit: int | None = Query(None, description="Limit number of logs returned")):
+    """Get all activity logs (optionally limited)."""
+    try:
         data = read_json(ACTIVITY_PATH)
-        return {"status": "success", "data": data.get("logs", [])}
+        logs = data.get("logs", [])
+        
+        if limit is not None:
+            logs = logs[-limit:]  # ✅ return most recent N entries
+
+        return {"status": "success", "data": logs}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read activity logs: {str(e)}")
-
 @router.post("/")
 async def create_activity(request: ActivityRequest):
     """Log a new activity."""

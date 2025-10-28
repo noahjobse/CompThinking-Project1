@@ -15,10 +15,11 @@ class User(BaseModel):
 
 class Task(BaseModel):
     """Represents a single task entry."""
-    id: int
+    id: int | None = None
     title: str
-    assignedTo: str  
+    assignedTo: str
     status: TaskStatus
+
 
 class Document(BaseModel):
     """Represents a shared editable document."""

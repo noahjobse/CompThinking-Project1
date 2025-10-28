@@ -35,5 +35,10 @@ async def update_document(updated: Document):
         write_json(DOCUMENT_PATH, {"document": updated.model_dump()})
         add_activity(updated.lastEditedBy, "updated document", updated.title)
         return {"status": "success", "data": updated}
+
+    # Allow FastAPI errors (403, 404, etc.) to pass through
+    except HTTPException:
+        raise
+    # Catch other unexpected errors
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update document: {str(e)}")
