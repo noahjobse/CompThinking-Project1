@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from models.schemas import LoginRequest
 from utils.file_ops import read_json, write_json, add_activity
 from utils.constants import USERS_PATH
 
@@ -33,3 +34,27 @@ async def create_user():
         return {"status": "success", "data": new_user}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+
+
+@router.post("/login")
+async def login(request: LoginRequest):
+    """Authenticate user credentials and return role info."""
+    try:
+        data = read_json(USERS_PATH)
+        users = data.get("users", [])
+
+        for user in users:
+            if user["username"] == request.username and user["password"] == request.password:
+                add_activity(user["username"], "logged in")
+                return {
+                    "status": "success",
+                    "data": {
+                        "username": user["username"],
+                        "role": user["role"]
+                    }
+                }
+
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to log in: {str(e)}")
