@@ -13,7 +13,7 @@ async def get_users():
         return {"status": "success", "data": data.get("users", [])}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read users: {str(e)}")
-    
+
 @router.post("/")
 async def create_user(request: dict):
     """Create a new user (Admin-only)."""
@@ -57,8 +57,7 @@ async def create_user(request: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
-
-
+    
 @router.post("/login")
 async def login(request: LoginRequest):
     """Authenticate a user and return role information."""
@@ -78,3 +77,29 @@ async def login(request: LoginRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to log in: {str(e)}")
+
+@router.post("/logout")
+async def logout(request: dict):
+    """Log a user out and record the activity."""
+    try:
+        username = request.get("username")
+        if not username:
+            raise HTTPException(status_code=400, detail="Missing username field.")
+
+        # Verify the user exists
+        data = read_json(USERS_PATH)
+        users = data.get("users", [])
+        user = next((u for u in users if u["username"] == username), None)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        # Log the logout activity
+        add_activity(username, "logged out")
+
+        return {"status": "success", "message": f"{username} logged out successfully."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to log out: {str(e)}")
