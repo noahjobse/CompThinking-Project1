@@ -26,7 +26,8 @@ class Document(BaseModel):
     title: str
     content: str
     lastEditedBy: str
-    lastUpdated: str
+    lastUpdated: Optional[str] = None 
+
 
 class ActivityLog(BaseModel):
     """Represents a logged user action."""

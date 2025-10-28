@@ -1,12 +1,6 @@
 {
   "tasks": [
     {
-      "id": 1,
-      "title": "Write project overview",
-      "assignedTo": "editor123",
-      "status": "In Progress"
-    },
-    {
       "id": 2,
       "title": "Review roles",
       "assignedTo": "admin123",
@@ -274,6 +268,12 @@
       "id": 46,
       "title": "deletecheck",
       "assignedTo": "viewer123",
+      "status": "Pending"
+    },
+    {
+      "id": 47,
+      "title": "Test new feature flow",
+      "assignedTo": "editor123",
       "status": "Pending"
     }
   ]

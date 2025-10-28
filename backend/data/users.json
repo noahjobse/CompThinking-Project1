@@ -17,6 +17,12 @@
       "username": "viewer123",
       "password": "viewer123",
       "role": "Viewer"
+    },
+    {
+      "id": 4,
+      "username": "newtestuser",
+      "password": "test123",
+      "role": "Viewer"
     }
   ]
 }
