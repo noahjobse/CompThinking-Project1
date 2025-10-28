@@ -12,7 +12,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 _LOCK = threading.Lock()
 
 def _ensure_file(path, default_payload):
-    path = Path(path)  # ensure it’s always a Path
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
         with open(path, "w", encoding="utf-8") as f:
@@ -20,7 +20,7 @@ def _ensure_file(path, default_payload):
 
 
 def read_json(path):
-    path = Path(path)  # <── add this line
+    path = Path(path)
     _ensure_file(path, {})
     with _LOCK:
         try:

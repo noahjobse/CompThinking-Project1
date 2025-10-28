@@ -13,7 +13,7 @@ async def get_activity(limit: int | None = Query(None, description="Limit number
         logs = data.get("logs", [])
         
         if limit is not None:
-            logs = logs[-limit:]  # ✅ return most recent N entries
+            logs = logs[-limit:]
 
         return {"status": "success", "data": logs}
 

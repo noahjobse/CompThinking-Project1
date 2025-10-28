@@ -25,10 +25,8 @@ async def get_document():
 async def update_document(updated: Document):
     """Update the document content."""
     try:
-        # Enforce Admin or Editor
         require_role(updated.lastEditedBy, {"Admin", "Editor"})
 
-        # Auto-fill timestamp if missing
         if not updated.lastUpdated:
             updated.lastUpdated = datetime.now().strftime(DATETIME_FMT)
 
@@ -36,9 +34,7 @@ async def update_document(updated: Document):
         add_activity(updated.lastEditedBy, "updated document", updated.title)
         return {"status": "success", "data": updated}
 
-    # Allow FastAPI errors (403, 404, etc.) to pass through
     except HTTPException:
         raise
-    # Catch other unexpected errors
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update document: {str(e)}")

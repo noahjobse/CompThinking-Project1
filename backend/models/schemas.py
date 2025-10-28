@@ -1,11 +1,9 @@
 from typing import Optional, Literal, List
 from pydantic import BaseModel
 
-# Core Type Aliases
 Role = Literal["Admin", "Editor", "Viewer"]
 TaskStatus = Literal["Pending", "In Progress", "Done"]
 
-# Entity Models
 class User(BaseModel):
     """Represents a user account."""
     id: int
@@ -36,7 +34,6 @@ class ActivityLog(BaseModel):
     action: str
     details: Optional[str] = None
 
-# Payload Wrappers (for persisted JSON)
 class UsersPayload(BaseModel):
     users: List[User]
 
@@ -49,7 +46,6 @@ class DocumentPayload(BaseModel):
 class ActivityPayload(BaseModel):
     logs: List[ActivityLog]
 
-# Request Models
 class LoginRequest(BaseModel):
     username: str
     password: str

@@ -18,7 +18,6 @@ async def get_tasks():
 @router.post("/")
 async def create_task(task: Task):
     """Create a new task."""
-    # Enforce Admin or Editor
     require_role(task.assignedTo, {"Admin", "Editor"})
 
     data = read_json(TASKS_PATH)
@@ -36,7 +35,6 @@ async def create_task(task: Task):
 @router.put("/{task_id}")
 async def update_task(task_id: int, task: Task):
     """Update an existing task."""
-    # Enforce Admin or Editor
     require_role(task.assignedTo, {"Admin", "Editor"})
 
     data = read_json(TASKS_PATH)
@@ -63,7 +61,6 @@ async def delete_task(task_id: int):
     
     for idx, existing_task in enumerate(tasks):
         if existing_task["id"] == task_id:
-            # Enforce Admin or Editor
             require_role(existing_task["assignedTo"], {"Admin", "Editor"})
 
             deleted_task = tasks.pop(idx)
