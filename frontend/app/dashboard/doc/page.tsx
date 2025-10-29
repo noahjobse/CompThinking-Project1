@@ -3,24 +3,33 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Toast from "@/components/ui/Toast";
-
-const DOCUMENT_STORAGE_KEY = "document_content";
-const DEFAULT_CONTENT = "This is a collaborative document...\n\nStart editing here!";
+import { API_BASE } from "@/lib/api";
 
 export default function DocumentPage() {
-    const { role } = useAuth();
-    const [content, setContent] = useState(DEFAULT_CONTENT);
+    const { user, role } = useAuth();
+    const [content, setContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
+    const [loading, setLoading] = useState(true);
     const isViewer = role === "Viewer";
 
-    // Load saved content on mount
     useEffect(() => {
-        const savedContent = localStorage.getItem(DOCUMENT_STORAGE_KEY);
-        if (savedContent) {
-            setContent(savedContent);
-        }
+        loadDocument();
     }, []);
+
+    const loadDocument = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/document`);
+            const json = await res.json();
+            if (res.ok && json.status === "success") {
+                setContent(json.data.content || "");
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (isViewer) {
@@ -30,18 +39,30 @@ export default function DocumentPage() {
         setContent(e.target.value);
     };
 
-    const handleSave = () => {
-        if (isViewer) {
+    const handleSave = async () => {
+        if (isViewer || !user) {
             setShowToast(true);
             return;
         }
-        
-        // Save to localStorage
-        localStorage.setItem(DOCUMENT_STORAGE_KEY, content);
-        
-        // Show success message
-        setSaveMessage("Document saved successfully!");
-        setTimeout(() => setSaveMessage(""), 3000);
+        try {
+            const res = await fetch(`${API_BASE}/api/document`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "Team Collaboration Workspace",
+                    content,
+                    lastEditedBy: user.username,
+                    lastUpdated: ""
+                }),
+            });
+            const json = await res.json();
+            if (res.ok && json.status === "success") {
+                setSaveMessage("Document saved successfully!");
+                setTimeout(() => setSaveMessage(""), 3000);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const handleTextareaClick = () => {
@@ -49,6 +70,14 @@ export default function DocumentPage() {
             setShowToast(true);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-gray-600">Loading document...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full p-6">
@@ -99,9 +128,7 @@ export default function DocumentPage() {
                                 : 'hover:bg-gray-50'
                         }`}
                         onClick={() => {
-                            if (isViewer) {
-                                setShowToast(true);
-                            }
+                            if (isViewer) setShowToast(true);
                         }}
                     >
                         <strong>B</strong>
@@ -113,9 +140,7 @@ export default function DocumentPage() {
                                 : 'hover:bg-gray-50'
                         }`}
                         onClick={() => {
-                            if (isViewer) {
-                                setShowToast(true);
-                            }
+                            if (isViewer) setShowToast(true);
                         }}
                     >
                         <em>I</em>
@@ -127,9 +152,7 @@ export default function DocumentPage() {
                                 : 'hover:bg-gray-50'
                         }`}
                         onClick={() => {
-                            if (isViewer) {
-                                setShowToast(true);
-                            }
+                            if (isViewer) setShowToast(true);
                         }}
                     >
                         <u>U</u>

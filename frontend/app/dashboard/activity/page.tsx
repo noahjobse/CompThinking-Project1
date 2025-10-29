@@ -5,12 +5,15 @@ import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/lib/api";
 
 interface ActivityLog {
-    logs: string[];
+    timestamp: string;
+    user: string;
+    action: string;
+    details?: string;
 }
 
 export default function ActivityLogPage() {
     const { role } = useAuth();
-    const [activityLogs, setActivityLogs] = useState<string[]>([]);
+    const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -19,28 +22,13 @@ export default function ActivityLogPage() {
 
     const loadActivityLogs = async () => {
         try {
-            // Note: This endpoint would need to be added to the backend
-            // For now, we'll create a mock fetch that returns the activity log structure
             const response = await fetch(`${API_BASE}/api/activity`);
-            if (response.ok) {
-                const data: ActivityLog = await response.json();
-                setActivityLogs(data.logs || []);
-            } else {
-                // If endpoint doesn't exist yet, show sample data
-                setActivityLogs([
-                    "2025-01-26 13:00:00 — admin123 logged in",
-                    "2025-01-26 12:45:00 — editor123 logged out",
-                    "2025-01-26 12:30:00 — viewer123 logged in",
-                ]);
+            const json = await response.json();
+            if (response.ok && json.status === "success") {
+                setActivityLogs(json.data || []);
             }
         } catch (error) {
             console.error("Failed to load activity logs:", error);
-            // Show sample data on error
-            setActivityLogs([
-                "2025-01-26 13:00:00 — admin123 logged in",
-                "2025-01-26 12:45:00 — editor123 logged out",
-                "2025-01-26 12:30:00 — viewer123 logged in",
-            ]);
         } finally {
             setLoading(false);
         }
@@ -77,7 +65,7 @@ export default function ActivityLogPage() {
                                 key={index}
                                 className="bg-white p-3 rounded shadow-sm border border-gray-200 font-mono text-sm"
                             >
-                                {log}
+                                {`${log.timestamp} — ${log.user} ${log.action}`}
                             </div>
                         ))}
                     </div>
