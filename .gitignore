@@ -10,3 +10,4 @@ backend/.env
 /backend/__pycache__
 /backend/tests/__pycache__
 /backend/data
+phase3combo.txt
