@@ -1,1 +1,13 @@
+frontend/package-lock.json
+combined_output.txt
+combine.py
+backend/data/activity.json
+/backend/__pycache__
 backend/.env
+/backend/models/__pycache__
+/backend/routes/api/__pycache__
+/backend/utils/__pycache__
+/backend/__pycache__
+/backend/tests/__pycache__
+/backend/data
+phase3combo.txt

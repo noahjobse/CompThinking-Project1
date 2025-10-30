@@ -12,7 +12,7 @@ interface User {
 }
 
 export default function UsersPage() {
-    const { role } = useAuth();
+    const { user, role } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [showToast, setShowToast] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -35,18 +35,18 @@ export default function UsersPage() {
     };
 
     const handleAddUser = async () => {
-        if (!isAdmin) {
-            setShowToast(true);
-            return;
-        }
-        
-        try {
-            await createAdminUser();
-            await loadUsers();
-        } catch (error) {
-            console.error("Failed to add user:", error);
-            alert("Failed to add user");
-        }
+    if (!isAdmin) {
+        setShowToast(true);
+        return;
+    }
+
+    try {
+        await createAdminUser(user?.username); // pass username
+        await loadUsers();
+    } catch (error) {
+        console.error("Failed to add user:", error);
+        alert("Failed to add user");
+    }
     };
 
     const handleDeleteUser = (userId: number) => {

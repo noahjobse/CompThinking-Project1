@@ -1,10 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { API_BASE } from "@/lib/api";
 
-// Define types
 type Role = "Admin" | "Editor" | "Viewer";
 
 interface User {
@@ -28,105 +27,78 @@ interface AuthContextType {
   revalidateSession: () => Promise<void>;
 }
 
-// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Storage keys
 const STORAGE_KEY = "auth_session";
 
-// AuthProvider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Revalidate session with backend
-  const revalidateSession = async () => {
-    try {
-      const savedSession = localStorage.getItem(STORAGE_KEY);
-      
-      if (!savedSession) {
-        setIsLoading(false);
-        return;
-      }
+  // -----------------------
+  // Revalidate existing session
+  // -----------------------
+const revalidateSession = useCallback(async () => {
+  try {
+    const savedSession = localStorage.getItem(STORAGE_KEY);
+    if (!savedSession) {
+      setIsLoading(false);
+      return;
+    }
 
-      const session = JSON.parse(savedSession);
-      
-      // Verify user still exists in backend
-      const response = await fetch(`${API_BASE}/users`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      
-      const users: BackendUser[] = await response.json();
-      const userExists = users.some(
-        (u) => u.username === session.username && u.role === session.role
-      );
+    const session = JSON.parse(savedSession);
 
-      if (userExists) {
-        setUser(session);
-      } else {
-        // User no longer exists or role changed, clear session
-        localStorage.removeItem(STORAGE_KEY);
-        setUser(null);
-        
-        // Redirect to login if not already there
-        if (pathname !== "/login") {
-          router.push("/login");
-        }
-      }
-    } catch (error) {
-      console.error("Session validation failed:", error);
+    const response = await fetch(`${API_BASE}/api/users`);
+    if (!response.ok) throw new Error("Failed to fetch users");
+
+    const json = await response.json();
+    const users: BackendUser[] = json.data;
+
+    const userExists = users.some(
+      (u) => u.username === session.username && u.role === session.role
+    );
+
+    if (userExists) {
+      setUser(session);
+    } else {
       localStorage.removeItem(STORAGE_KEY);
       setUser(null);
-      
-      // Redirect to login if not already there
-      if (pathname !== "/login") {
-        router.push("/login");
-      }
-    } finally {
-      setIsLoading(false);
+      if (pathname !== "/login") router.push("/login");
     }
-  };
+  } catch (error) {
+    console.error("Session validation failed:", error);
+    localStorage.removeItem(STORAGE_KEY);
+    setUser(null);
+    if (pathname !== "/login") router.push("/login");
+  } finally {
+    setIsLoading(false);
+  }
+}, [pathname, router]);   // ✅ stable deps
 
-  // Login function
+
+  // -----------------------
+  // Login
+  // -----------------------
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE}/login`, {
+      const response = await fetch(`${API_BASE}/api/users/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Login failed");
+      const json = await response.json();
+      if (!response.ok || json.status !== "success") {
+        throw new Error(json.detail || "Invalid username or password");
       }
 
-      const data = await response.json();
-      const userData: User = {
-        username: data.username,
-        role: data.role,
-      };
+      const { username: name, role } = json.data;
+      const userData: User = { username: name, role };
 
-      // Save to localStorage
+      // Save locally
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
       setUser(userData);
-
-      // Log activity
-      await fetch(`${API_BASE}/api/activity`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user: userData.username,
-          action: "logged in",
-        }),
-      });
 
       // Redirect to menu
       router.push("/menu");
@@ -136,42 +108,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Logout function
+  // -----------------------
+  // Logout
+  // -----------------------
   const logout = async () => {
     try {
-      // Log activity before clearing session
       if (user) {
-        await fetch(`${API_BASE}/api/activity`, {
+        await fetch(`${API_BASE}/api/users/logout`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user: user.username,
-            action: "logged out",
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: user.username }),
         });
       }
 
-      // Clear all localStorage data
       localStorage.clear();
       setUser(null);
-
-      // Redirect to login
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      // Still clear local data even if backend logging fails
       localStorage.clear();
       setUser(null);
       router.push("/login");
     }
   };
 
-  // Validate session on mount
   useEffect(() => {
     revalidateSession();
-  }, []);
+  }, [revalidateSession]);
 
   const value: AuthContextType = {
     user,
@@ -185,7 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook to use auth context
+// -----------------------
+// Hook
+// -----------------------
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
