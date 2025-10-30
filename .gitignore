@@ -11,3 +11,7 @@ backend/.env
 /backend/tests/__pycache__
 /backend/data
 phase3combo.txt
+/backend/routes/ws/__pycache__
+/backend/__pycache__
+combine.py
+backend/data/tasks.json
