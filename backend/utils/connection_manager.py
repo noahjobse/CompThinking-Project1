@@ -29,12 +29,12 @@ class ConnectionManager:
                 connection["cursor"] = position
                 break
 
-    def get_presence(self) -> List[Dict]:
-        """Get the list of active users and their cursor positions"""
+    def get_presence(self) -> list[dict]:
         return [
-            {"username": conn["username"], "cursor": conn.get("cursor", None)}
+            {"user": conn["user"], "cursor": conn.get("cursor", None)}
             for conn in self.active_connections
         ]
+
     
 # Shared global instance for all WebSocket routes
 manager = ConnectionManager()

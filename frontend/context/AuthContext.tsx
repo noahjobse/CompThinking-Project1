@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { API_BASE } from "@/lib/api";
 
@@ -39,42 +39,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // -----------------------
   // Revalidate existing session
   // -----------------------
-  const revalidateSession = async () => {
-    try {
-      const savedSession = localStorage.getItem(STORAGE_KEY);
-      if (!savedSession) {
-        setIsLoading(false);
-        return;
-      }
+const revalidateSession = useCallback(async () => {
+  try {
+    const savedSession = localStorage.getItem(STORAGE_KEY);
+    if (!savedSession) {
+      setIsLoading(false);
+      return;
+    }
 
-      const session = JSON.parse(savedSession);
+    const session = JSON.parse(savedSession);
 
-      const response = await fetch(`${API_BASE}/api/users`);
-      if (!response.ok) throw new Error("Failed to fetch users");
+    const response = await fetch(`${API_BASE}/api/users`);
+    if (!response.ok) throw new Error("Failed to fetch users");
 
-      const json = await response.json();
-      const users: BackendUser[] = json.data; // backend returns {status, data:[…]}
+    const json = await response.json();
+    const users: BackendUser[] = json.data;
 
-      const userExists = users.some(
-        (u) => u.username === session.username && u.role === session.role
-      );
+    const userExists = users.some(
+      (u) => u.username === session.username && u.role === session.role
+    );
 
-      if (userExists) {
-        setUser(session);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-        setUser(null);
-        if (pathname !== "/login") router.push("/login");
-      }
-    } catch (error) {
-      console.error("Session validation failed:", error);
+    if (userExists) {
+      setUser(session);
+    } else {
       localStorage.removeItem(STORAGE_KEY);
       setUser(null);
       if (pathname !== "/login") router.push("/login");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Session validation failed:", error);
+    localStorage.removeItem(STORAGE_KEY);
+    setUser(null);
+    if (pathname !== "/login") router.push("/login");
+  } finally {
+    setIsLoading(false);
+  }
+}, [pathname, router]);   // ✅ stable deps
+
 
   // -----------------------
   // Login
@@ -133,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     revalidateSession();
-  }, []);
+  }, [revalidateSession]);
 
   const value: AuthContextType = {
     user,

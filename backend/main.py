@@ -4,6 +4,7 @@ from utils.constants import USERS_PATH, ACTIVITY_PATH
 from utils.file_ops import write_json
 from routes.api import activity, users, tasks, document
 from utils.constants import USERS_PATH, ACTIVITY_PATH
+from routes.ws import document_ws
 
 
 # -----------------------------
@@ -23,6 +24,8 @@ app.include_router(users.router)
 app.include_router(activity.router)
 app.include_router(tasks.router)
 app.include_router(document.router)
+
+app.include_router(document_ws.router)
 
 # -----------------------------
 # Seed default users (if empty)
